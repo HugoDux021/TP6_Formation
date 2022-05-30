@@ -1,0 +1,6 @@
+[python]
+pythonubuntu ansible_ssh_host=pythonubuntu
+pythoncentos ansible_ssh_host=pythoncentos ansible_python_interpreter=/usr/bin/python3.6
+[mariadb]
+dbubuntu ansible_ssh_host=dbubuntu
+dbcentos ansible_ssh_host=dbcentos ansible_python_interpreter=/usr/bin/python3.6

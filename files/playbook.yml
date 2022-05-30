@@ -1,0 +1,209 @@
+---
+# APP PYTHON
+# Python group, valable pour ubuntu et centos
+
+#  valable pour ubuntu
+
+- hosts: pythonubuntu
+  vars_files: 
+  - vars/main.yml
+
+  tasks:
+  - name: install softwares last version
+    apt:
+      name:
+        - python3-pip
+        - mariadb-server
+        - python3-setuptools                            
+        - gcc                                           
+        - libmariadb3
+        - libmariadb-dev
+      state: present
+      update_cache: yes
+  
+  - name: installer connecteur mariadb
+    shell: pip install mysql-connector-python
+  
+  - name: installer pip3 mariadb
+    shell: pip3 install mariadb
+  
+  - name: Definir variable d environement DB_HOST ubuntu
+    shell: export DB_HOST={{ mysql_dbhostubuntu }}
+  
+  - name: Definir variable d environement DB_PORT ubuntu
+    shell: export DB_PORT={{ mysql_dbportubuntu }}
+  
+  - name: Definir variable d environement DB_IP ubuntu
+    shell: export DB_IP={{ mysql_dbipubuntu }}
+
+# valable pour centos
+
+- hosts: pythoncentos
+  vars_files: 
+  - vars/main.yml
+
+  tasks: 
+
+  - name: Definir variable d'environement DB_HOST centos
+    shell: export DB_HOST={{ mysql_dbhostcentos }}
+
+  - name: Definir variable d'environement DB_PORT centos
+    shell: export DB_PORT={{ mysql_dbportcentos }}
+
+  - name: Definir variable d'environement DB_IP centos
+    shell: export DB_IP={{ mysql_dbipcentos }} 
+
+  - name: install software last version
+    yum:
+      name:
+        - python3-pip
+        - python3-setuptools
+        - gcc
+        - python36-devel
+        - MariaDB-shared 
+        - MariaDB-devel   
+        - mariadb-server   
+      state: present
+      update_cache: yes
+
+  - name: installer connecteur mariadb
+    shell: pip install mysql-connector-python
+
+  - name: installer pip3 mariadb                        
+    shell: pip3 install mariadb  
+
+- hosts: python                                         
+  vars_files:                
+                           
+  - vars/main.yml                                       
+
+  tasks:                                                                   
+  - name: upload app source                             
+    copy:                                               
+      src: tp-sql/                                      
+      dest: tp-sql/                                                        
+                                                                           
+  - name: Definir variable d'environement USER_DB       
+    shell: export USER_DB={{ mysql_user }}       
+                                                        
+  - name: Definir variable d'environement DB_NAME                          
+    shell: export DB_NAME={{ mysql_dbname }}                           
+                                                        
+  - name: Definir variable d'environement DB_PASSWORD   
+    shell: export DB_PASSWORD={{ mysql_password }}
+                                                                           
+  - name: lancer application                                               
+    command: |                                          
+      python3 /root/tp-sql/app-python/main.py           
+                                                        
+
+# DATABASE SERVER
+
+- hosts: mariadb
+  vars_files: 
+  - vars/main.yml
+
+  gather_facts: true
+  become: true
+
+# Valable pour centos
+
+- hosts: dbcentos
+  vars_files: 
+  - vars/main.yml
+
+  tasks:
+  - name: install mariadb
+    yum:
+      name:
+        - mariadb-server
+        - python3-PyMySQL
+      state: latest
+
+  - name: start mariadb
+    service:
+      name: mariadb
+      enabled: true
+      state: started
+
+  - name: mysql_root_password
+    mysql_user:
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      user: root
+      check_implicit_admin: true
+      password: "{{ mysql_root_password }}"
+      host: "%"
+      priv: "*.*:ALL"
+
+  - name: mysql_password
+    mysql_user: 
+      login_user: "{{ mysql_user }}"
+      login_password: "{{ mysql_password }}"
+      user: "{{ mysql_user }}"
+      check_implicit_admin: true
+      password: "{{ mysql_password }}"
+      host: "%"   
+      priv: "*.*:ALL"
+
+  - name: remove remote root
+    mysql_user:
+      check_implicit_admin: true
+      login_user: root
+      login_password: "{{ mysql_root_password }}" 
+      user: root
+      host: "{{ ansible_fqdn }}" # ansible produit cette variable tout seul
+      state: absent
+
+# Valable pour ubuntu
+
+- hosts: dbubuntu
+  vars_files: 
+  - vars/main.yml
+
+  tasks:
+  - name: install mariadb
+    apt:
+      name:
+        - mariadb-server
+        - python3-PyMySQL
+      state: latest
+
+  - name: start mariadb
+    service:
+      name: mariadb
+      enabled: true
+      state: started
+
+  - name: mysql_root_password
+    mysql_user:
+      login_user: root
+      login_password: "{{ mysql_root_password }}" 
+      user: root
+      check_implicit_admin: true
+      password: "{{ mysql_root_password }}"  
+      host: "%"
+      priv: "*.*:ALL"
+
+  - name: mysql_password
+    mysql_user: 
+      login_user: "{{ mysql_user }}"
+      login_password: "{{ mysql_password }}" 
+      user: "{{ mysql_user }}"
+      check_implicit_admin: true
+      password: "{{ mysql_password }}"  
+      host: "%"     
+      priv: "*.*:ALL"
+
+  - name: remove remote root
+    mysql_user:
+      check_implicit_admin: true
+      login_user: root
+      login_password: "{{ mysql_root_password }}" 
+      user: root
+      host: "{{ ansible_fqdn }}" # ansible produit cette variable tout seul
+      state: absent        
+
+
+
+
